@@ -48,12 +48,22 @@ type ControlMessage = SpeechStarted | Connected | TextDone;
 
 type WSMessage = TextDelta | Transcription | UserMessage | ControlMessage;
 
+/**
+ * Represents a real-time session that manages communication with a client through a WebSocket connection.
+ * It handles audio and text messages, interacts with an RTClient for processing, and manages the session lifecycle.
+ */
 export class RTSession {
   private client: RTClient;
   private ws: WebSocket;
   private readonly sessionId: string;
   private logger: Logger;
 
+  /**
+   * Creates a new RTSession instance.
+   * @param ws The WebSocket instance for communicating with the client.
+   * @param backend The backend type to use (e.g., "azure").
+   * @param logger The logger instance for logging session activities.
+   */
   constructor(ws: WebSocket, backend: string | undefined, logger: Logger) {
     this.sessionId = crypto.randomUUID();
     this.ws = ws;
@@ -65,6 +75,9 @@ export class RTSession {
     this.initialize();
   }
 
+  /**
+   * Initializes the real-time session by configuring the RTClient, sending a greeting message, and starting the event loop.
+   */
   async initialize() {
     this.logger.debug("Configuring realtime session");
     await this.client.configure({
@@ -90,14 +103,27 @@ export class RTSession {
     this.startEventLoop();
   }
 
+  /**
+   * Sends a message to the client via the WebSocket connection.
+   * @param message The message to send (must be serializable to JSON).
+   */
   private send(message: WSMessage) {
     this.ws.send(JSON.stringify(message));
   }
 
+  /**
+   * Sends a binary message to the client via the WebSocket connection.
+   * @param message The binary message to send.
+   */
   private sendBinary(message: ArrayBufferLike) {
     this.ws.send(Buffer.from(message), { binary: true });
   }
 
+  /**
+   * Initializes the RTClient based on the specified backend.
+   * @param backend The backend type to use (e.g., "azure").
+   * @returns An instance of RTClient configured for the specified backend.
+   */
   private initializeClient(backend: string | undefined): RTClient {
     this.logger.debug({ backend }, "Initializing RT client");
 
@@ -113,6 +139,9 @@ export class RTSession {
     });
   }
 
+  /**
+   * Sets up event handlers for WebSocket events (message, close, error).
+   */
   private setupEventHandlers() {
     this.logger.debug("Client configured successfully");
 
@@ -123,6 +152,11 @@ export class RTSession {
     });
   }
 
+  /**
+   * Handles incoming messages from the WebSocket, routing them based on whether they are binary or text.
+   * @param message The incoming message.
+   * @param isBinary Indicates whether the message is binary data.
+   */
   private async handleMessage(message: Buffer, isBinary: boolean) {
     try {
       if (isBinary) {
@@ -135,6 +169,10 @@ export class RTSession {
     }
   }
 
+  /**
+   * Handles incoming binary messages, typically audio data, by sending them to the RTClient.
+   * @param message The binary message containing audio data.
+   */
   private async handleBinaryMessage(message: Buffer) {
     try {
       await this.client.sendAudio(new Uint8Array(message));
@@ -144,6 +182,10 @@ export class RTSession {
     }
   }
 
+  /**
+   * Handles incoming text messages, processing user messages and sending them to the RTClient.
+   * @param message The text message received.
+   */
   private async handleTextMessage(message: Buffer) {
     const messageString = message.toString("utf-8");
     const parsed: WSMessage = JSON.parse(messageString);
@@ -166,6 +208,9 @@ export class RTSession {
     }
   }
 
+  /**
+   * Handles the WebSocket close event, closing the RTClient connection.
+   */
   private async handleClose() {
     this.logger.info("Session closing");
     try {
@@ -176,6 +221,10 @@ export class RTSession {
     }
   }
 
+  /**
+   * Handles RTTextContent, sending text deltas and completion signals to the client.
+   * @param content The text content received from the RTClient.
+   */
   private async handleTextContent(content: RTTextContent) {
     try {
       const contentId = `${content.itemId}-${content.contentIndex}`;
@@ -195,6 +244,10 @@ export class RTSession {
     }
   }
 
+  /**
+   * Handles RTAudioContent, sending audio and transcription data to the client.
+   * @param content The audio content received from the RTClient.
+   */
   private async handleAudioContent(content: RTAudioContent) {
     const handleAudioChunks = async () => {
       for await (const chunk of content.audioChunks()) {
@@ -218,6 +271,10 @@ export class RTSession {
     }
   }
 
+  /**
+   * Handles RTResponse events, processing each item and content type within the response.
+   * @param event The RTResponse event received from the RTClient.
+   */
   private async handleResponse(event: RTResponse) {
     try {
       for await (const item of event) {
@@ -238,6 +295,10 @@ export class RTSession {
     }
   }
 
+  /**
+   * Handles RTInputAudioItem events, sending transcription and completion information to the client.
+   * @param event The input audio event received from the RTClient.
+   */
   private async handleInputAudio(event: RTInputAudioItem) {
     try {
       this.send({ type: "control", action: "speech_started" });
@@ -259,6 +320,9 @@ export class RTSession {
     }
   }
 
+  /**
+   * Starts the main event loop, listening for events from the RTClient and handling them.
+   */
   private async startEventLoop() {
     try {
       this.logger.debug("Starting event loop");
