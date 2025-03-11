@@ -1,0 +1,20 @@
+services:
+  realtime-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: azureaivoicedemo.azurecr.io/realtime-backend:latest
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8080:8080"
+
+  realtime-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: azureaivoicedemo.azurecr.io/realtime-frontend:latest
+    env_file:
+      - ./frontend/.env
+    ports:
+      - "3000:3000"

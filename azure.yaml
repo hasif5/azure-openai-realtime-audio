@@ -1,0 +1,22 @@
+name: azure-realtime-app
+resourceGroup: rg-ai-services-eus2
+location: eastus2
+metadata:
+  version: 1.0.0
+
+# services:
+#   realtime-backend:
+#     project: ./backend
+#     language: ts
+#     host: containerapp
+#     docker:
+#       remoteBuild: true
+#   realtime-frontend:
+#     project: ./frontend
+#     language: ts
+#     host: containerapp
+#     docker:
+#       remoteBuild: true
+
+infrastructure:
+  template: main.bicep
