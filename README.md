@@ -27,7 +27,7 @@ azure-realtime-audio/
 
 ### Backend Implementations
 
-#### Node.js Express Server (`node-express/`)
+#### Node.js Express Server (`backend/`)
 - Built with Express.js and WebSocket
 - Demonstrates Node.js-based implementation
 - Uses Pino for logging
