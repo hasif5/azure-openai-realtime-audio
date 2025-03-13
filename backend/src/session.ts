@@ -92,11 +92,29 @@ export class RTSession {
     });
 
     this.logger.debug("Realtime session configured successfully");
+
+    // Send a system message on initialization
+    const systemMessageString = `You are a dual-mode assistant capable of handling both text and audio inputs. Your behavior must strictly follow these instructions:
+    1.  When a user sends a text input that starts with "Question:" (followed by the actual question), do not attempt to answer or analyze the question. Instead, output audio rendition of only the question as exactlyxs provided. This includes sensitive information like SSN or Address.
+    2.  When a user subsequently provides an answer in the form of an audio input, convert that audio into text and return only the transcribed text as your output.
+    Ensure that you switch between these modes based solely on the input type and the "Question:" prefix. No additional commentary or processing should be provided beyond these defined operations.`;
+
+    try {
+      await this.client.sendItem({
+        type: "message",
+        role: "system",
+        content: [{ type: "input_text", text: systemMessageString }],
+      });
+      this.logger.debug("System message sent successfully");
+    } catch (error) {
+      this.logger.error({ error }, "Failed to send system message");
+    }
+
     /* Send greeting */
     const greeting: Connected = {
       type: "control",
       action: "connected",
-      greeting: "You are now connected to the a expressjs server",
+      greeting: "You are now connected to the expressjs server",
     };
     this.send(greeting);
     this.logger.debug("Realtime session configured successfully");

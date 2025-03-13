@@ -44,7 +44,7 @@ yarn dev
 
 ## Usage
 
-### Middle Tier Endpoint
+### Backend Endpoint
 
 -  Update with your backend endpoint, if needed
 
