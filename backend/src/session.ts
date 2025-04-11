@@ -78,6 +78,21 @@ export class RTSession {
       },
     });
 
+    // Add system instructions to the conversation
+    const systemInstruction =
+      process.env.SYSTEM_INSTRUCTION ||
+      "You are a helpful AI assistant powered by GPT-4o. Answer questions concisely and accurately. Be friendly and helpful.";
+    await this.client.sendItem({
+      type: "message",
+      role: "system",
+      content: [
+        {
+          type: "input_text",
+          text: systemInstruction,
+        },
+      ],
+    });
+
     this.logger.debug("Realtime session configured successfully");
     /* Send greeting */
     const greeting: Connected = {
@@ -105,7 +120,7 @@ export class RTSession {
       return new RTClient(
         new URL(process.env.AZURE_OPENAI_ENDPOINT!),
         new AzureKeyCredential(process.env.AZURE_OPENAI_API_KEY!),
-        { deployment: process.env.AZURE_OPENAI_DEPLOYMENT! },
+        { deployment: process.env.AZURE_OPENAI_DEPLOYMENT! }
       );
     }
     return new RTClient(new AzureKeyCredential(process.env.OPENAI_API_KEY!), {
@@ -251,7 +266,7 @@ export class RTSession {
       this.send(transcription);
       this.logger.debug(
         { transcriptionLength: transcription.text.length },
-        "Input audio processed successfully",
+        "Input audio processed successfully"
       );
     } catch (error) {
       this.logger.error({ error }, "Error handling input audio");
